@@ -4,7 +4,7 @@ namespace Rutatiina\Qbuks;
 
 use Illuminate\Support\ServiceProvider;
 
-class QbuksQServiceProvider extends ServiceProvider
+class QbuksServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap services.
