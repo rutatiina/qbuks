@@ -3,6 +3,7 @@
 namespace Rutatiina\Qbuks;
 
 use Illuminate\Support\ServiceProvider;
+use Rutatiina\Qbuks\Console\Commands\AfterUpdateCommand;
 
 class QbuksServiceProvider extends ServiceProvider
 {
@@ -17,6 +18,12 @@ class QbuksServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__.'/resources/views/limitless', 'admin');
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                AfterUpdateCommand::class,
+            ]);
+        }
     }
 
     /**
