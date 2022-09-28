@@ -4,6 +4,7 @@ namespace Rutatiina\Qbuks\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Rutatiina\Banking\Models\Transaction;
 use Rutatiina\FinancialAccounting\Models\Account;
 
 class AfterUpdateCommand extends Command
@@ -50,7 +51,31 @@ class AfterUpdateCommand extends Command
             ]);
         $this->info("* Complete.");
 
-        //the script to process recurring requests
+        $this->info("* Updating bank transactions with 'bank_account_financial_account_code'.");
+        //update bank_account_financial_account_code column in the rg_banking_transactions
+        $bankTransactions = Transaction::withoutGlobalScopes()
+            ->with(['bank_account' => function ($query) {
+                $query->withoutGlobalScopes();
+            }])
+            ->whereNull('bank_account_financial_account_code')
+            ->orWhere('bank_account_financial_account_code', '')
+            ->distinct('bank_account_id')
+            ->groupBy('bank_account_id')
+            ->get();
+            
+        foreach ($bankTransactions as $key => $txn) {
+            $bankAccount = $txn->bank_account;
+            Transaction::withoutGlobalScopes()
+                ->where('bank_account_id', $txn->bank_account_id)
+                ->where(function($q){
+                    $q->whereNull('bank_account_financial_account_code');
+                    $q->orWhere('bank_account_financial_account_code', '');
+                })
+                ->update([
+                    'bank_account_financial_account_code' => $bankAccount->financial_account_code
+                ]);
+        }
+        $this->info("* Complete.");
 
         // return 0;
     }
