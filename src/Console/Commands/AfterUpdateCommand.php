@@ -3,29 +3,30 @@
 namespace Rutatiina\Qbuks\Console\Commands;
 
 use Illuminate\Console\Command;
+use Rutatiina\Bill\Models\Bill;
+use Rutatiina\Sales\Models\Sales;
+use Rutatiina\POS\Models\POSOrder;
 use Illuminate\Support\Facades\Log;
-use Rutatiina\Banking\Models\Transaction;
-use Rutatiina\Bill\Models\RecurringBill;
-use Rutatiina\CreditNote\Models\CreditNote;
-use Rutatiina\DebitNote\Models\DebitNote;
-use Rutatiina\Estimate\Models\Estimate;
 use Rutatiina\Expense\Models\Expense;
-use Rutatiina\Expense\Models\RecurringExpense;
-use Rutatiina\FinancialAccounting\Models\Account;
-use Rutatiina\GoodsDelivered\Models\GoodsDelivered;
+use Rutatiina\Invoice\Models\Invoice;
+use Rutatiina\Estimate\Models\Estimate;
+use Rutatiina\Bill\Models\RecurringBill;
+use Rutatiina\Banking\Models\Transaction;
+use Rutatiina\DebitNote\Models\DebitNote;
+use Rutatiina\CreditNote\Models\CreditNote;
+use Rutatiina\SalesOrder\Models\SalesOrder;
 use Rutatiina\GoodsIssued\Models\GoodsIssued;
+use Rutatiina\PaymentMade\Models\PaymentMade;
+use Rutatiina\Expense\Models\RecurringExpense;
+use Rutatiina\Invoice\Models\RecurringInvoice;
+use Rutatiina\PettyCash\Models\PettyCashEntry;
+use Rutatiina\FinancialAccounting\Models\Account;
 use Rutatiina\GoodsReceived\Models\GoodsReceived;
 use Rutatiina\GoodsReturned\Models\GoodsReturned;
-use Rutatiina\Invoice\Models\Invoice;
-use Rutatiina\Invoice\Models\RecurringInvoice;
-use Rutatiina\PaymentMade\Models\PaymentMade;
-use Rutatiina\PaymentReceived\Models\PaymentReceived;
-use Rutatiina\PettyCash\Models\PettyCashEntry;
-use Rutatiina\POS\Models\POSOrder;
 use Rutatiina\PurchaseOrder\Models\PurchaseOrder;
+use Rutatiina\GoodsDelivered\Models\GoodsDelivered;
+use Rutatiina\PaymentReceived\Models\PaymentReceived;
 use Rutatiina\RetainerInvoice\Models\RetainerInvoice;
-use Rutatiina\Sales\Models\Sales;
-use Rutatiina\SalesOrder\Models\SalesOrder;
 
 class AfterUpdateCommand extends Command
 {
@@ -69,7 +70,7 @@ class AfterUpdateCommand extends Command
                 'type' => 'expense',
                 'sub_type' => 'cost-of-sales',
             ]);
-        $this->info("* Complete.");
+        $this->info("  * Complete.");
 
         $this->info("* Updating bank transactions with 'bank_account_financial_account_code'.");
         //update bank_account_financial_account_code column in the rg_banking_transactions
@@ -95,7 +96,7 @@ class AfterUpdateCommand extends Command
                     'bank_account_financial_account_code' => $bankAccount->financial_account_code
                 ]);
         }
-        $this->info("* Complete.");
+        $this->info("  * Complete.");
 
         //Find deleted transactions and mark them as canceled
         $this->info("* Find deleted transactions and mark them as canceled.");
@@ -137,15 +138,19 @@ class AfterUpdateCommand extends Command
 
         foreach ($tables as $t => $model) 
         {
-            $model::withTrashed()
-                ->whereNotNull('deleted_at')
-                ->update(['canceled' => 1]);
+            $count = $model::withTrashed()->whereNotNull('deleted_at')->count();
+            $this->info("   - Table: ".$t." has ".$count." deleted records.");
+
+            $model::withTrashed()->whereNotNull('deleted_at')->update(['canceled' => 1]);
             
-            $model::withTrashed()
-                ->whereNotNull('deleted_at')
-                ->restore();  
+            // $model::withTrashed()->whereNotNull('deleted_at')->restore();
+            $model::withTrashed()->whereNotNull('deleted_at')->chunk(500, function ($records) {
+                foreach ($records as $record) {
+                    $record->restore();
+                }
+            });
         }
-        $this->info("* Complete.");
+        $this->info("  * Complete.");
 
         // return 0;
     }

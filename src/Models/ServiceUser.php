@@ -2,11 +2,14 @@
 
 namespace Rutatiina\Qbuks\Models;
 
-use Rutatiina\Tenant\Scopes\TenantIdScope;
 use Illuminate\Database\Eloquent\Model;
+use Rutatiina\Tenant\Scopes\TenantIdScope;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ServiceUser extends Model
 {
+    use SoftDeletes;
+    
     protected $connection = 'system';
 
     protected $table = 'rg_service_users';
