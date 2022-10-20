@@ -73,6 +73,25 @@ class AfterUpdateCommand extends Command
     {
         $this->info('* After update initiated.');
 
+        $this->info("* Changing 'Other Inventory' to Just 'Inventory' account name.");
+        Account::withoutGlobalScopes()
+            ->where('code', 130500)
+            ->update([
+                'name' => 'Inventory',
+            ]);
+        $this->info("  * Complete.");
+
+    
+        // return 0;
+    }
+
+
+    /*
+    Phase out on 15th Oct 2022 because it had been run on both the Shop and Server
+    public function handle()
+    {
+        $this->info('* After update initiated.');
+
         $this->info("* Changing 'cost-of-sales' back to 'expense'.");
         Account::withoutGlobalScopes()
             ->where('type', 'cost-of-sales')
@@ -406,4 +425,5 @@ class AfterUpdateCommand extends Command
 
         // return 0;
     }
+    */
 }
