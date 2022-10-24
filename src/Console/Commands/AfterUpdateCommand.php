@@ -5,17 +5,20 @@ namespace Rutatiina\Qbuks\Console\Commands;
 use Throwable;
 use Illuminate\Console\Command;
 use Rutatiina\Bill\Models\Bill;
+use Rutatiina\Item\Models\Item;
 use Rutatiina\Sales\Models\Sales;
 use Rutatiina\POS\Models\POSOrder;
 use Illuminate\Support\Facades\Log;
+use Rutatiina\Tenant\Models\Tenant;
 use Rutatiina\Expense\Models\Expense;
 use Rutatiina\Invoice\Models\Invoice;
-use Illuminate\Database\Eloquent\Builder;
 use Rutatiina\POS\Models\POSOrderItem;
 use Rutatiina\Estimate\Models\Estimate;
 use Spatie\Activitylog\Models\Activity;
 use Rutatiina\Bill\Models\RecurringBill;
 use Rutatiina\POS\Models\POSOrderLedger;
+use Rutatiina\Tenant\Traits\TenantTrait;
+use Illuminate\Database\Eloquent\Builder;
 use Rutatiina\Banking\Models\Transaction;
 use Rutatiina\DebitNote\Models\DebitNote;
 use Rutatiina\POS\Models\POSOrderItemTax;
@@ -40,6 +43,7 @@ use Rutatiina\GoodsDelivered\Models\GoodsDeliveredItem;
 
 class AfterUpdateCommand extends Command
 {
+    use TenantTrait;
     /**
      * The name and signature of the console command.
      *
@@ -73,12 +77,25 @@ class AfterUpdateCommand extends Command
     {
         $this->info('* After update initiated.');
 
-        $this->info("* Changing 'Other Inventory' to Just 'Inventory' account name.");
-        Account::withoutGlobalScopes()
-            ->where('code', 130500)
-            ->update([
-                'name' => 'Inventory',
-            ]);
+        /*
+        $this->info("* Delete the Discount account");
+            Account::withoutGlobalScopes()
+                ->where('code', 410500)
+                ->forceDelete();
+        $this->info("  * Complete.");
+
+        $this->info("* Update the details of the accounts.");
+        Tenant::chunk(100, function ($tenants) {
+            foreach ($tenants as $tenant) {
+                $this->setupFinancialAccounts($tenant->id);
+                $this->info("  - Accounts updated for: ".$tenant->name);
+            }
+        });
+        $this->info("  * Complete.");
+        //*/
+
+        $this->info("* Update items billing_financial_account_code");//UPDATE `rg_items` SET `billing_financial_account_code` = '130500' WHERE `id` = '40';
+            Item::withoutGlobalScopes()->update(['billing_financial_account_code' => 130500]);
         $this->info("  * Complete.");
 
     
