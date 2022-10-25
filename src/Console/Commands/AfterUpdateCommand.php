@@ -40,6 +40,7 @@ use Rutatiina\GoodsReturned\Models\GoodsReturnedItem;
 use Rutatiina\PaymentReceived\Models\PaymentReceived;
 use Rutatiina\RetainerInvoice\Models\RetainerInvoice;
 use Rutatiina\GoodsDelivered\Models\GoodsDeliveredItem;
+use Rutatiina\Inventory\Models\Inventory;
 
 class AfterUpdateCommand extends Command
 {
@@ -77,7 +78,7 @@ class AfterUpdateCommand extends Command
     {
         $this->info('* After update initiated.');
 
-        /*
+        //*
         $this->info("* Delete the Discount account");
             Account::withoutGlobalScopes()
                 ->where('code', 410500)
@@ -96,6 +97,17 @@ class AfterUpdateCommand extends Command
 
         $this->info("* Update items billing_financial_account_code");//UPDATE `rg_items` SET `billing_financial_account_code` = '130500' WHERE `id` = '40';
             Item::withoutGlobalScopes()->update(['billing_financial_account_code' => 130500]);
+        $this->info("  * Complete.");
+
+        $this->info("* Set the default financial_account_code in rg_inventory to 130500");
+            Inventory::withoutGlobalScopes()->update(['financial_account_code' => 130500]);
+        $this->info("  * Complete.");
+
+        $this->info("* Set the default inventory_valuation_system, inventory_valuation_method");
+            Tenant::withoutGlobalScopes()->update([
+                'inventory_valuation_system' => 'perpetual',
+                'inventory_valuation_method' => 'fifo'
+            ]);
         $this->info("  * Complete.");
 
     
