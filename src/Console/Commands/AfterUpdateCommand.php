@@ -23,6 +23,7 @@ use Rutatiina\Banking\Models\Transaction;
 use Rutatiina\DebitNote\Models\DebitNote;
 use Rutatiina\POS\Models\POSOrderItemTax;
 use Rutatiina\CreditNote\Models\CreditNote;
+use Rutatiina\Expense\Models\ExpenseItem;
 use Rutatiina\SalesOrder\Models\SalesOrder;
 use Rutatiina\GoodsIssued\Models\GoodsIssued;
 use Rutatiina\PaymentMade\Models\PaymentMade;
@@ -78,7 +79,7 @@ class AfterUpdateCommand extends Command
     {
         $this->info('* After update initiated.');
 
-        //*
+        /*
         $this->info("* Delete the Discount account");
             Account::withoutGlobalScopes()
                 ->where('code', 410500)
@@ -93,7 +94,6 @@ class AfterUpdateCommand extends Command
             }
         });
         $this->info("  * Complete.");
-        //*/
 
         $this->info("* Update items billing_financial_account_code");//UPDATE `rg_items` SET `billing_financial_account_code` = '130500' WHERE `id` = '40';
             Item::withoutGlobalScopes()->update(['billing_financial_account_code' => 130500]);
@@ -108,6 +108,26 @@ class AfterUpdateCommand extends Command
                 'inventory_valuation_system' => 'perpetual',
                 'inventory_valuation_method' => 'fifo'
             ]);
+        $this->info("  * Complete.");
+        //*/
+
+        $this->info("* Update Expense items debit_financial_account_code");
+            $expenses = Expense::withoutGlobalScopes()
+                ->with(['items' => function ($query) {
+                    $query->withoutGlobalScopes();
+                }])
+                ->get();
+
+            foreach($expenses as $expense)
+            {
+                $this->info("  - Expense #: ".$expense->id);
+                foreach ($expense->items as $key => $item) {
+                    $this->info("  - Expense-item #: ".$item->id);
+                    ExpenseItem::withoutGlobalScopes()->where('id', $item->id)->update([
+                        'debit_financial_account_code' => $expense->debit_financial_account_code
+                    ]);
+                }
+            }
         $this->info("  * Complete.");
 
     
