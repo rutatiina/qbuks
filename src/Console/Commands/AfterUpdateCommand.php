@@ -21,9 +21,10 @@ use Rutatiina\Tenant\Traits\TenantTrait;
 use Illuminate\Database\Eloquent\Builder;
 use Rutatiina\Banking\Models\Transaction;
 use Rutatiina\DebitNote\Models\DebitNote;
+use Rutatiina\Expense\Models\ExpenseItem;
+use Rutatiina\Inventory\Models\Inventory;
 use Rutatiina\POS\Models\POSOrderItemTax;
 use Rutatiina\CreditNote\Models\CreditNote;
-use Rutatiina\Expense\Models\ExpenseItem;
 use Rutatiina\SalesOrder\Models\SalesOrder;
 use Rutatiina\GoodsIssued\Models\GoodsIssued;
 use Rutatiina\PaymentMade\Models\PaymentMade;
@@ -41,7 +42,7 @@ use Rutatiina\GoodsReturned\Models\GoodsReturnedItem;
 use Rutatiina\PaymentReceived\Models\PaymentReceived;
 use Rutatiina\RetainerInvoice\Models\RetainerInvoice;
 use Rutatiina\GoodsDelivered\Models\GoodsDeliveredItem;
-use Rutatiina\Inventory\Models\Inventory;
+use Rutatiina\Item\Seeders\ItemUnitsOfMeasurementSeeder;
 
 class AfterUpdateCommand extends Command
 {
@@ -109,7 +110,6 @@ class AfterUpdateCommand extends Command
                 'inventory_valuation_method' => 'fifo'
             ]);
         $this->info("  * Complete.");
-        //*/
 
         $this->info("* Update Expense items debit_financial_account_code");
             $expenses = Expense::withoutGlobalScopes()
@@ -128,6 +128,12 @@ class AfterUpdateCommand extends Command
                     ]);
                 }
             }
+        $this->info("  * Complete.");
+        //*/
+
+        $this->info("* Create Tenant Units of Measurements");
+        //php artisan db:seed --class=\\Rutatiina\\Item\\Seeders\\ItemUnitsOfMeasurementSeeder
+        $this->call('db:seed', ['--class' => ItemUnitsOfMeasurementSeeder::class]);
         $this->info("  * Complete.");
 
     
