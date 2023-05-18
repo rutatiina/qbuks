@@ -76,11 +76,11 @@ class AfterUpdateCommand extends Command
      *
      * @return int
      */
+    /*
     public function handle()
     {
         $this->info('* After update initiated.');
 
-        /*
         $this->info("* Delete the Discount account");
             Account::withoutGlobalScopes()
                 ->where('code', 410500)
@@ -129,16 +129,8 @@ class AfterUpdateCommand extends Command
                 }
             }
         $this->info("  * Complete.");
-        //*/
-
-        $this->info("* Create Tenant Units of Measurements");
-        //php artisan db:seed --class=\\Rutatiina\\Item\\Seeders\\ItemUnitsOfMeasurementSeeder
-        $this->call('db:seed', ['--class' => ItemUnitsOfMeasurementSeeder::class]);
-        $this->info("  * Complete.");
-
-    
-        // return 0;
     }
+    //*/
 
 
     /*
@@ -481,4 +473,48 @@ class AfterUpdateCommand extends Command
         // return 0;
     }
     */
+
+    //Find out why this code was written
+    /*
+    public function handle()
+    {
+        $this->info('* After update initiated.');
+
+        $this->info("* Create Tenant Units of Measurements");
+        //php artisan db:seed --class=\\Rutatiina\\Item\\Seeders\\ItemUnitsOfMeasurementSeeder
+        $this->call('db:seed', ['--class' => ItemUnitsOfMeasurementSeeder::class]);
+        $this->info("  * Complete.");
+
+    
+        // return 0;
+    }
+    //*/
+
+    public function handle()
+    {
+        $this->info('* After update initiated.');
+
+        $classes = [
+            \Rutatiina\GoodsDelivered\Models\GoodsDeliveredSetting::class,
+            \Rutatiina\GoodsIssued\Models\GoodsIssuedSetting::class,
+            \Rutatiina\GoodsReceived\Models\GoodsReceivedSetting::class,
+            \Rutatiina\GoodsReturned\Models\GoodsReturnedSetting::class,
+            \Rutatiina\Sales\Models\SalesSetting::class
+        ];
+
+        foreach (Tenant::all() as $tenant)
+        {
+            $this->info('- Cleaning settings records for :: #'.$tenant->id.' > '.$tenant->name);
+
+            foreach($classes as $class)
+            {
+                $settings = $class::withoutGlobalScopes()->where('tenant_id', $tenant->id)->first();
+                if ($settings) $class::withoutGlobalScopes()->whereNotIn('id', [$settings->id])->forceDelete();
+            }
+        }
+
+        $this->info('############## Now running the DocumentNumbersSeeder seeder #############');
+
+        $this->call('db:seed', ['--class' => \Rutatiina\Sales\Seeders\DocumentNumbersSeeder::class]);
+    }
 }
