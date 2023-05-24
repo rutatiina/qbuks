@@ -43,6 +43,7 @@ use Rutatiina\PaymentReceived\Models\PaymentReceived;
 use Rutatiina\RetainerInvoice\Models\RetainerInvoice;
 use Rutatiina\GoodsDelivered\Models\GoodsDeliveredItem;
 use Rutatiina\Item\Seeders\ItemUnitsOfMeasurementSeeder;
+use Rutatiina\Tenant\Scopes\TenantIdScope;
 
 class AfterUpdateCommand extends Command
 {
@@ -490,6 +491,8 @@ class AfterUpdateCommand extends Command
     }
     //*/
 
+    /*
+    // run on qbuks.com
     public function handle()
     {
         $this->info('* After update initiated.');
@@ -516,5 +519,303 @@ class AfterUpdateCommand extends Command
         $this->info('############## Now running the DocumentNumbersSeeder seeder #############');
 
         $this->call('db:seed', ['--class' => \Rutatiina\Sales\Seeders\DocumentNumbersSeeder::class]);
+    }
+    //*/
+
+    public function handle()
+    {
+        $this->info("* Re-evaluating balances");
+
+        //truncate all the balances
+        \Rutatiina\FinancialAccounting\Models\AccountBalance::truncate();
+        \Rutatiina\FinancialAccounting\Models\AccountDailyBalance::truncate();
+
+        //truncate the contact balances
+        \Rutatiina\FinancialAccounting\Models\ContactBalance::truncate();
+
+        //truncate the item balances
+        \Rutatiina\FinancialAccounting\Models\ItemBalance::truncate();
+
+
+        //POS
+        \Rutatiina\POS\Models\POSOrder::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- POS balances updated');
+
+        //sales
+        \Rutatiina\Sales\Models\Sales::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                $txn->balances_where_updated = 0;
+                $this->info('   - Sales #'.$txn->id);
+
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Sales balances updated');
+       //*/
+
+        //estimates - has custom balance table
+
+        //retainer invoice
+        \Rutatiina\RetainerInvoice\Models\RetainerInvoice::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Retainer invoice balances updated');
+
+        //sales order - has custom balance table
+
+        //invoices
+        \Rutatiina\Invoice\Models\Invoice::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Invoice balances updated');
+
+        //payments received
+        \Rutatiina\PaymentReceived\Models\PaymentReceived::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+            }
+        });
+        $this->info('- Payment received balances updated');
+
+        //recurring invoice - NA - balances are not updated for these
+
+        //credit notes
+        \Rutatiina\CreditNote\Models\CreditNote::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Credit note balances updated');
+
+        //petty cash
+        \Rutatiina\PettyCash\Models\PettyCashEntry::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+            }
+        });
+        $this->info('- Petty cash balances updated');
+
+        //expenses
+        \Rutatiina\Expense\Models\Expense::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Expense balances updated');
+
+        //recurring expense - NA - balances are not updated for these
+
+        //purchase order
+        \Rutatiina\PurchaseOrder\Models\PurchaseOrder::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::singleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::singleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Purchase order balances updated');
+
+        //bills
+        \Rutatiina\Bill\Models\Bill::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Bill balances updated');
+
+        //payments made
+        \Rutatiina\PaymentMade\Models\PaymentMade::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+            }
+        });
+        $this->info('- Payment made balances updated');
+
+        //recurring bills - NA - balances are not updated for these
+
+        //bebit notes
+        \Rutatiina\DebitNote\Models\DebitNote::withoutGlobalScopes([TenantIdScope::class])
+        ->with(['items' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])
+        ->with(['ledgers' => function ($query) {
+            $query->withoutGlobalScopes([TenantIdScope::class]);
+        }])->chunk(500, function ($txns) 
+        {
+            foreach ($txns as $txn) 
+            {
+                //Update the account balances
+                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
+
+                //Update the contact balances
+                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::doubleEntry($txn);
+
+                //Update the item balances
+                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
+            }
+        });
+        $this->info('- Debit Note balances updated');
+
+        $this->info("  * Complete.");
     }
 }
