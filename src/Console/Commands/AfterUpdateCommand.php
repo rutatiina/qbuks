@@ -542,9 +542,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -565,9 +563,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -594,9 +590,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -619,9 +613,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -642,9 +634,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -664,9 +654,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -684,12 +672,7 @@ class AfterUpdateCommand extends Command
 
         //petty cash
         \Rutatiina\PettyCash\Models\PettyCashEntry::withoutGlobalScopes([TenantIdScope::class])
-        ->with(['items' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -707,9 +690,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -753,9 +734,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -776,9 +755,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
@@ -798,9 +775,7 @@ class AfterUpdateCommand extends Command
         ->with(['items' => function ($query) {
             $query->withoutGlobalScopes([TenantIdScope::class]);
         }])
-        ->with(['ledgers' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])->chunk(500, function ($txns) 
+        ->chunk(500, function ($txns) 
         {
             foreach ($txns as $txn) 
             {
