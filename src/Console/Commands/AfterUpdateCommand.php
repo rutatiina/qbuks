@@ -536,6 +536,36 @@ class AfterUpdateCommand extends Command
         //truncate the item balances
         \Rutatiina\FinancialAccounting\Models\ItemBalance::truncate();
 
+        /*/Fill the items taxable amount column
+        $itemTables = [
+            \Rutatiina\POS\Models\POSOrderItem::class,
+            \Rutatiina\Sales\Models\SalesItem::class,
+            \Rutatiina\RetainerInvoice\Models\RetainerInvoiceItem::class,
+            \Rutatiina\Invoice\Models\InvoiceItem::class,
+            \Rutatiina\PaymentReceived\Models\PaymentReceivedItem::class,
+            \Rutatiina\CreditNote\Models\CreditNoteItem::class,
+            \Rutatiina\Expense\Models\ExpenseItem::class,
+            \Rutatiina\Bill\Models\BillItem::class,
+            \Rutatiina\PaymentMade\Models\PaymentMadeItem::class,
+            \Rutatiina\DebitNote\Models\DebitNoteItem::class
+        ];
+
+        foreach($itemTables as $table)
+        {
+            $table::withoutGlobalScopes([TenantIdScope::class])
+            ->chunk(500, function ($items) 
+            {
+                foreach ($items as $item) 
+                {
+                    $item->taxable_amount = $item->total ?? $item->amount;
+                    $item->save();
+                }
+            });
+        }
+        $this->info('- Taxable amount filled');
+        return;
+        //*/
+
 
         //POS
         \Rutatiina\POS\Models\POSOrder::withoutGlobalScopes([TenantIdScope::class])
@@ -568,7 +598,7 @@ class AfterUpdateCommand extends Command
             foreach ($txns as $txn) 
             {
                 $txn->balances_where_updated = 0;
-                $this->info('   - Sales #'.$txn->id);
+                // $this->info('   - Sales #'.$txn->id);
 
                 //Update the account balances
                 \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::doubleEntry($txn);
@@ -708,26 +738,7 @@ class AfterUpdateCommand extends Command
 
         //recurring expense - NA - balances are not updated for these
 
-        //purchase order
-        \Rutatiina\PurchaseOrder\Models\PurchaseOrder::withoutGlobalScopes([TenantIdScope::class])
-        ->with(['items' => function ($query) {
-            $query->withoutGlobalScopes([TenantIdScope::class]);
-        }])
-        ->chunk(500, function ($txns) 
-        {
-            foreach ($txns as $txn) 
-            {
-                //Update the account balances
-                \Rutatiina\FinancialAccounting\Services\AccountBalanceUpdateService::singleEntry($txn);
-
-                //Update the contact balances
-                \Rutatiina\FinancialAccounting\Services\ContactBalanceUpdateService::singleEntry($txn);
-
-                //Update the item balances
-                \Rutatiina\FinancialAccounting\Services\ItemBalanceUpdateService::entry($txn);
-            }
-        });
-        $this->info('- Purchase order balances updated');
+        //purchase order - has custom balance table
 
         //bills
         \Rutatiina\Bill\Models\Bill::withoutGlobalScopes([TenantIdScope::class])
