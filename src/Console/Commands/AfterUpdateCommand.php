@@ -526,6 +526,11 @@ class AfterUpdateCommand extends Command
     {
         $this->info("* Re-evaluating balances");
 
+        \Rutatiina\RetainerInvoice\Models\RetainerInvoiceSetting::withoutGlobalScopes([TenantIdScope::class])->whereNotNull('tenant_id')->update([
+            'credit_financial_account_code' => 220200, //Deferred Income (Unearned Revenue) 
+        ]);
+        $this->info('- Deferred Income (Unearned Revenue) ');
+
         //truncate all the balances
         \Rutatiina\FinancialAccounting\Models\AccountBalance::truncate();
         \Rutatiina\FinancialAccounting\Models\AccountDailyBalance::truncate();
@@ -536,7 +541,7 @@ class AfterUpdateCommand extends Command
         //truncate the item balances
         \Rutatiina\FinancialAccounting\Models\ItemBalance::truncate();
 
-        /*/Fill the items taxable amount column
+        //Fill the items taxable amount column
         $itemTables = [
             \Rutatiina\POS\Models\POSOrderItem::class,
             \Rutatiina\Sales\Models\SalesItem::class,
