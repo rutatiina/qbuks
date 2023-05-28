@@ -526,6 +526,9 @@ class AfterUpdateCommand extends Command
     {
         $this->info("* Re-evaluating balances");
 
+        \Rutatiina\FinancialAccounting\Models\Account::withoutGlobalScopes([TenantIdScope::class])->where('code', 410200)->delete(); //Deferred Revenue	Revenue : Revenue
+        $this->info('- Remove Deferred Revenue	Revenue : Revenue account');
+
         \Rutatiina\RetainerInvoice\Models\RetainerInvoiceSetting::withoutGlobalScopes([TenantIdScope::class])->whereNotNull('tenant_id')->update([
             'credit_financial_account_code' => 220200, //Deferred Income (Unearned Revenue) 
         ]);
