@@ -571,7 +571,6 @@ class AfterUpdateCommand extends Command
             });
         }
         $this->info('- Taxable amount filled');
-        return;
         //*/
 
 
