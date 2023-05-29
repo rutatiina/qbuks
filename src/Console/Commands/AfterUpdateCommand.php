@@ -522,6 +522,8 @@ class AfterUpdateCommand extends Command
     }
     //*/
 
+    /*
+    // run on qbuks.com >> 28 May 2023
     public function handle()
     {
         $this->info("* Re-evaluating balances");
@@ -571,7 +573,7 @@ class AfterUpdateCommand extends Command
             });
         }
         $this->info('- Taxable amount filled');
-        //*/
+        //
 
 
         //POS
@@ -618,7 +620,7 @@ class AfterUpdateCommand extends Command
             }
         });
         $this->info('- Sales balances updated');
-       //*/
+       //
 
         //estimates - has custom balance table
 
@@ -810,5 +812,11 @@ class AfterUpdateCommand extends Command
         $this->info('- Debit Note balances updated');
 
         $this->info("  * Complete.");
+    }
+    //*/
+
+    public function handle()
+    {
+        $this->info("* Updates action bellow");
     }
 }
