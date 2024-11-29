@@ -10,9 +10,10 @@
         }
     ],
     "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "laravel/framework": "^8.0",
-        "rutatiina/financial-accounting": "*",
+        "rutatiina/financial-accounting": "dev-main",
         "rutatiina/inventory": "dev-main"
     },
     "autoload": {
